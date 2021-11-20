@@ -10,7 +10,6 @@ import axios from "axios";
 //const EXPENSES_API_BASE_URL = "http://localhost:8080/api/v1/expenses";
 
 const Stack = createNativeStackNavigator();
-
 export default function App() {
 
   
@@ -36,11 +35,11 @@ export default function App() {
           name="postExpense"
           component={PostExpense}
         />
-        {/*<Stack.Screen
-          name="seeexpenses"
-          component={seeexpenses}
-        />
         <Stack.Screen
+          name="seeExpenses"
+          component={SeeExpenses}
+        />
+        {/*<Stack.Screen
           name="finalreport"
           component={finalreport}
         /> */}
@@ -81,7 +80,6 @@ const Login = ({navigation}) => {
 
 const Homescreen = ({navigation}) => {
   const [tripId, onChangeTripId] = React.useState("tripId");
-
   const[expenses, getExpenses] = useState('');
   const url = 'http://localhost:8080/api/v1/expenses';
 
@@ -118,12 +116,72 @@ const Homescreen = ({navigation}) => {
     />
     <Button
       title = "See All Expenses"
-      //onPress = {() => navigation.navigate('homescreen')}
+      onPress = {() => navigation.navigate('seeExpenses',{paramTripId: tripId})}
     />
     <Button
       title = "Close Trip"
       //onPress = {() => navigation.navigate('homescreen')}
     />
+  </View>
+  )
+}
+
+const SeeExpenses = ({route, navigation}) => {
+  const paramTripId = route.params.paramTripId;
+  const[expenses, getExpenses] = useState([{"id":0,"travelID":"nn","userID":null,"amount":0,"description":"nn"}]);
+  const url = 'http://localhost:8080/api/v1/expenses/allexpensesbytrip/' + paramTripId;
+
+  useEffect(() => {
+    getAllExpenses();
+  },[]);
+
+  const getAllExpenses = () => {
+    axios.get(`${url}`)
+    .then((response)=>{
+      const allExpenses = response.data.map(function(expense){
+        return expense;
+      });
+      getExpenses(allExpenses);
+    })
+    .catch(error => console.error(`Error: ${error}`));
+
+    return(
+      expenses
+    )
+  }
+
+
+
+  return (
+  <View style={styles.container}>
+    <table>
+      <thead>
+        <tr>
+          <th>Travel ID</th>
+          <th>User ID</th>
+          <th>Amount</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          expenses.map(
+            (expense) => (
+
+              <tr key={expense.id}>
+                <th>{expense.travelID}</th>
+                <th>{expense.userID}</th>
+                <th>{expense.amount}</th>
+                <th>{expense.description}</th>
+              </tr>
+            )
+          )
+        }
+
+        
+      </tbody>
+
+    </table>
   </View>
   )
 }
@@ -151,8 +209,6 @@ const PostExpense = ({navigation}) => {
   </View>
   )
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
