@@ -80,7 +80,7 @@ const Login = ({navigation}) => {
 
 const Homescreen = ({navigation}) => {
   const [tripId, onChangeTripId] = React.useState("tripId");
-  const[expenses, getExpenses] = useState('');
+  /*const[expenses, getExpenses] = useState('');
   const url = 'http://localhost:8080/api/v1/expenses';
 
   useEffect(() => {
@@ -100,11 +100,11 @@ const Homescreen = ({navigation}) => {
     return(
       expenses
     )
-  }
+  }*/
   
   return (
   <View style={styles.container}>
-    <Text> Trip Id: {expenses}
+    <Text> Trip Id:
     </Text>
     <TextInput
       placeholder = "tripId"
@@ -112,7 +112,7 @@ const Homescreen = ({navigation}) => {
     />
     <Button
       title = "Post Expense"
-      onPress = {() => navigation.navigate('postExpense')}
+      onPress = {() => navigation.navigate('postExpense',{paramTripId: tripId})}
     />
     <Button
       title = "See All Expenses"
@@ -186,9 +186,31 @@ const SeeExpenses = ({route, navigation}) => {
   )
 }
 
-const PostExpense = ({navigation}) => {
-  const [amount, onChangeAmount] = React.useState("amount");
+const PostExpense = ({route, navigation}) => {
+  const paramTripId = route.params.paramTripId;
+  const [amount, onChangeAmount] = React.useState(0.0);
   const [description, onChangeDescription] = React.useState("description");
+  const expenseJson = { travelID: paramTripId, userID: "testuser", amount: amount, description: description};
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  /*useEffect(() => {
+    postExpense();
+  },[]);*/
+
+  const postExpense = () => {
+    axios.post('http://localhost:8080/api/v1/expenses/postexpense', expenseJson, config)
+    .then(res => {
+      console.log(res);
+      console.log(res.data);
+    })
+    //.then(response => this.setState({ articleId: response.data.id }))
+    //.catch(error => console.error(`Error: ${error}`));
+
+  }
 
   return (
   <View style={styles.container}>
@@ -204,7 +226,9 @@ const PostExpense = ({navigation}) => {
     />
     <Button
       title = "Post"
-      //onPress = {() => navigation.navigate('homescreen')}
+      onPress = {() => {
+        postExpense();
+      }}
     />
   </View>
   )
