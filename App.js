@@ -6,10 +6,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import ExpensesService from './services/ExpensesService';
 import axios from "axios";
+import JWT from 'expo-jwt';
 
 //const EXPENSES_API_BASE_URL = "http://localhost:8080/api/v1/expenses";
 
 const Stack = createNativeStackNavigator();
+const key = "travelapp2021";
 export default function App() {
 
   
@@ -39,10 +41,10 @@ export default function App() {
           name="seeExpenses"
           component={SeeExpenses}
         />
-        {/*<Stack.Screen
-          name="finalreport"
-          component={finalreport}
-        /> */}
+        <Stack.Screen
+          name="report"
+          component={Report}
+        /> 
       
 
       </Stack.Navigator>
@@ -58,6 +60,10 @@ export default function App() {
 }
 
 const Login = ({navigation}) => {
+  
+  const [username, onChangeUsername] = React.useState("username1");
+  const [password, onChangePassword] = React.useState("password1");
+  var token = "";
 
   return (
   <View style={styles.container}>
@@ -65,21 +71,33 @@ const Login = ({navigation}) => {
     <Text> Username: </Text>
     <TextInput
       placeholder = "username"
+      onChangeText = {onChangeUsername}
     />
     <Text> Password: </Text>
     <TextInput
       placeholder = "password"
+      onChangeText = {onChangePassword}
     />
     <Button
       title = "Log In"
-      onPress = {() => navigation.navigate('homescreen')}
+      onPress = {() => {
+        token= JWT.encode({username: username, password: password},key).toString();
+        navigation.navigate('homescreen',{paramToken: token});
+      }
+      }
     />
   </View>
   )
 }
 
-const Homescreen = ({navigation}) => {
+const Homescreen = ({route, navigation}) => {
+  const token = route.params.paramToken;
   const [tripId, onChangeTripId] = React.useState("tripId");
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
   /*const[expenses, getExpenses] = useState('');
   const url = 'http://localhost:8080/api/v1/expenses';
 
@@ -101,7 +119,21 @@ const Homescreen = ({navigation}) => {
       expenses
     )
   }*/
+
+  /*const validateUser = () => {
+
+  }*/
   
+  const postTrip = () => {
+    axios.post('http://localhost:8080/api/v1/trips/posttrip', {tripID:tripId,enabled:false}, config)
+    //.then(res => {
+      //response = res.data;
+    //})
+    //.then(response => this.setState({ articleId: response.data.id }))
+    //.catch(error => console.error(`Error: ${error}`));
+
+  }
+
   return (
   <View style={styles.container}>
     <Text> Trip Id:
@@ -112,7 +144,7 @@ const Homescreen = ({navigation}) => {
     />
     <Button
       title = "Post Expense"
-      onPress = {() => navigation.navigate('postExpense',{paramTripId: tripId})}
+      onPress = {() => navigation.navigate('postExpense',{paramTripId: tripId, paramToken:token})}
     />
     <Button
       title = "See All Expenses"
@@ -120,7 +152,11 @@ const Homescreen = ({navigation}) => {
     />
     <Button
       title = "Close Trip"
-      //onPress = {() => navigation.navigate('homescreen')}
+      onPress = {() => {
+        postTrip();
+        navigation.navigate('report',{paramTripId: tripId});
+
+      }}
     />
   </View>
   )
@@ -128,7 +164,7 @@ const Homescreen = ({navigation}) => {
 
 const SeeExpenses = ({route, navigation}) => {
   const paramTripId = route.params.paramTripId;
-  const[expenses, getExpenses] = useState([{"id":0,"travelID":"nn","userID":null,"amount":0,"description":"nn"}]);
+  const[expenses, getExpenses] = useState([{"id":null,"travelID":null,"userID":null,"amount":null,"description":null}]);
   const url = 'http://localhost:8080/api/v1/expenses/allexpensesbytrip/' + paramTripId;
 
   useEffect(() => {
@@ -187,10 +223,12 @@ const SeeExpenses = ({route, navigation}) => {
 }
 
 const PostExpense = ({route, navigation}) => {
+  const token = route.params.paramToken;
   const paramTripId = route.params.paramTripId;
   const [amount, onChangeAmount] = React.useState(0.0);
   const [description, onChangeDescription] = React.useState("description");
-  const expenseJson = { travelID: paramTripId, userID: "testuser", amount: amount, description: description};
+  const [message, onChangeMessage] = React.useState("");
+  const expenseJson = { travelID: paramTripId, userID: JWT.decode(token, key).username, amount: amount, description: description};
   const config = {
     headers: {
       'Content-Type': 'application/json'
@@ -201,14 +239,20 @@ const PostExpense = ({route, navigation}) => {
     postExpense();
   },[]);*/
 
-  const postExpense = () => {
-    axios.post('http://localhost:8080/api/v1/expenses/postexpense', expenseJson, config)
+  const postExpense = async() => {
+    var response = false;
+    await axios.post('http://localhost:8080/api/v1/expenses/postexpense', expenseJson, config)
     .then(res => {
-      console.log(res);
-      console.log(res.data);
+      response = res.data;
     })
     //.then(response => this.setState({ articleId: response.data.id }))
     //.catch(error => console.error(`Error: ${error}`));
+    console.log(response);
+    if(response===true){
+      onChangeMessage("Expense Posted Successfully");
+    } else {
+      onChangeMessage("This trip is already closed");
+    }
 
   }
 
@@ -224,12 +268,107 @@ const PostExpense = ({route, navigation}) => {
       placeholder = "Describe the expense"
       onChangeText = {onChangeDescription}
     />
+    <Text> {message} </Text>
     <Button
       title = "Post"
       onPress = {() => {
         postExpense();
       }}
     />
+  </View>
+  )
+}
+
+const Report = ({route, navigation}) => {
+  const token = route.params.paramToken;
+  const paramTripId = route.params.paramTripId;
+  const[expenses, getExpenses] = useState([{"id":null,"travelID":null,"userID":null,"amount":null,"description":null}]);
+  const url = 'http://localhost:8080/api/v1/expenses/report/' + paramTripId;
+  
+  useEffect(() => {
+    getReport();
+  },[]);
+
+  const getReport = () => {
+    axios.get(`${url}`)
+    .then((response)=>{
+      const allExpenses = response.data.map(function(expense){
+        return expense;
+      });
+      getExpenses(allExpenses);
+    })
+    .catch(error => console.error(`Error: ${error}`));
+
+    return(
+      expenses
+    )
+  }
+
+  const getTotal = () => {
+    var total = 0.0;
+    for(const expense of expenses){
+      total+=expense.amount;
+    }
+    return total;
+  }
+
+  const whoGetsWhat = () => {
+    for(const expense of expenses){
+      
+    }
+  }
+
+  return (
+  <View style={styles.container}>
+    <Text> Report:
+    </Text>
+
+    <table>
+      <thead>
+        <tr>
+          <th>REPORT</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          expenses.map(
+            (expense) => (
+
+              <tr key={expense.id}>
+                <th>{expense.userID}</th>
+                <th> paid</th>
+                <th>{expense.amount}</th>
+              </tr>
+            )
+          )
+        }
+        <tr>
+          <th> Grand Total: </th>
+          <th> {getTotal()}</th>
+        </tr>
+        {
+          expenses.map(
+            (expense) => (
+
+              <tr key={expense.id}>
+                <th>{expense.userID}</th>
+                <th> {()=>{
+                  if(getTotal()/expenses.length-expense.amount<0){
+                    return ("has to pay");
+                  } else {
+                    return ("has to get paid");
+                  }
+                }}
+                </th>
+                <th>{getTotal()/expenses.length-expense.amount}</th>
+              </tr>
+            )
+          )
+        }
+      </tbody>
+
+    </table>
+
   </View>
   )
 }
