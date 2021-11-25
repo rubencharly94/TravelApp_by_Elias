@@ -35,15 +35,16 @@ const headerStyle = {
     
   },
 }
-const buttonStyle = {backgroundColor:'#00c7b6',margin:'10px' };
-const inputStyle = {width:'70%',margin:'10px', textAlign:'center'};
+const buttonStyle = {backgroundColor:'#00c7b6' ,margin:10 };
+const inputStyle = {width:'70%',/* margin:'10px', */ textAlign:'center'};
 const tableStyle = {borderCollapse: 'collapse',
 /* margin: '5px', */
 fontSize: '1em',
 fontFamily: 'sans-serif',
-minWidth: '200px',
+//minWidth: '200px',
 boxShadow: '0 0 20px rgba(0, 0, 0, 0.15)'};
-const tableHeaderStyle = {backgroundColor:'gray',fontSize:'1.2em',minHeight:'100px'};
+const tableHeaderStyle = {backgroundColor:'gray',fontSize:'1.2em',flexDirection: "row",/*, minHeight:'100px' */};
+
 
 
 export default function App() {
@@ -217,7 +218,7 @@ const Homescreen = ({route, navigation}) => {
 
   return (
   <View style={styles.container}>
-    <Text h4 style={{margin:'20px'}}> Insert the ID of the trip:
+    <Text h4/*  style={{margin:'20px'}} */> Insert the trip ID:
     </Text>
     <Input
       placeholder = "tripId"
@@ -282,34 +283,28 @@ const SeeExpenses = ({route, navigation}) => {
 
   return (
   <View style={styles.container}>
-    <table style={tableStyle}>
-      <thead style={tableHeaderStyle}>
-        <tr>
-          <th>Travel ID</th>
-          <th>User ID</th>
-          <th>Amount</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
+    <View style={tableStyle}>
+      <View style={tableHeaderStyle}>
+          <View><Text>Travel ID</Text></View>
+          <View><Text>User ID</Text></View>
+          <View><Text>Amounut</Text></View>
+          <View><Text>Description</Text></View>
+      </View>
         {
           expenses.map(
             (expense) => (
 
-              <tr key={expense.id}>
-                <th>{expense.travelID}</th>
-                <th>{expense.userID}</th>
-                <th>{expense.amount}</th>
-                <th>{expense.description}</th>
-              </tr>
+              <View key={expense.id} style={{flexDirection:'row'}}>
+                <View><Text>  {expense.travelID}  </Text></View>
+                <View><Text>  {expense.userID}  </Text></View>
+                <View><Text>  {expense.amount}  </Text></View>
+                <View><Text>  {expense.description}  </Text></View>
+              </View>
             )
           )
         }
 
-        
-      </tbody>
-
-    </table>
+    </View>
   </View>
   )
 }
@@ -397,6 +392,7 @@ const Report = ({route, navigation}) => {
   const token = route.params.paramToken;
   const paramTripId = route.params.paramTripId;
   const[expenses, getExpenses] = useState([{"id":null,"travelID":null,"userID":null,"amount":null,"description":null}]);
+  const[message, changeMessage] = useState("");
   const url = 'http://192.168.0.10:8080/api/v1/expenses/report/' + paramTripId;
   
   useEffect(() => {
@@ -426,57 +422,46 @@ const Report = ({route, navigation}) => {
     return total;
   }
 
-  const whoGetsWhat = () => {
-    for(const expense of expenses){
-      
-    }
-  }
+  var whoGetsWhat = "";
 
   return (
   <View style={styles.container}>
 
-    <table style={tableStyle}>
-      <thead style={tableHeaderStyle}>
-        <tr>
-          <th>REPORT</th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
+    <View style={tableStyle}>
+        <View style={tableHeaderStyle}>
+          <View><Text> REPORT </Text></View>
+        </View>
         {
           expenses.map(
             (expense) => (
 
-              <tr key={expense.id}>
-                <th>{expense.userID}</th>
-                <th> paid</th>
-                <th>{expense.amount}</th>
-              </tr>
+              <View key={expense.id} style={{flexDirection:'row'}}>
+                <View><Text> {expense.userID} </Text></View>
+                <View><Text> paid </Text></View>
+                <View><Text> {expense.amount} </Text></View>
+              </View>
             )
           )
         }
-        <tr style={tableHeaderStyle}>
-          <th> Grand Total: </th>
-          <th> {getTotal()}</th>
-          <th></th>
-        </tr>
+        <View style={tableHeaderStyle}>
+          <View><Text> Grand Total: </Text></View>
+          <View><Text> {getTotal()} </Text></View>
+        </View>
         {
           expenses.map(
             (expense) => (
-
-              <tr key={expense.id}>
-                <th>{expense.userID}</th>
-                <th> {(getTotal()/expenses.length-expense.amount<0) ? <Text>has to get paid</Text> : <Text>has to pay</Text>}
-                </th>
-                <th>{(Math.abs(getTotal()/expenses.length-expense.amount)).toFixed(2)}</th>
-              </tr>
+              
+              <View key={expense.id} style={{flexDirection:'row'}}>
+                <View><Text> {expense.userID} </Text></View>
+                <View> <Text>{whoGetsWhat=((getTotal()/expenses.length-getTotal())<0) ? "has to get" : "has to pay"}{whoGetsWhat}</Text>
+                </View>
+                <View><Text> {(Math.abs(getTotal()/expenses.length-expense.amount)).toFixed(2)} </Text></View>
+              </View>
             )
           )
         }
-      </tbody>
 
-    </table>
+    </View>
 
   </View>
   )
