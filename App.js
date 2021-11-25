@@ -34,9 +34,11 @@ fontFamily: 'sans-serif',
 boxShadow: '0 0 20px rgba(0, 0, 0, 0.15)'};
 const tableHeaderStyle = {backgroundColor:'#81f7ed',fontSize:'1.2em',flexDirection: "row"};
 
+const compIP = "192.168.0.10:8080"; //IP of the computer working as server and port
 
 
-export default function App() {
+
+export default function App() { //Navigation components
 
   return (<SafeAreaProvider>
     <NavigationContainer>
@@ -74,9 +76,8 @@ export default function App() {
   </SafeAreaProvider>);
 }
 
-const Login = ({navigation}) => {
-  const [visible, setVisible] = useState(false);
-
+const Login = ({navigation}) => { //Login screen
+  const [visible, setVisible] = useState(false);  //sets visibility of the Overlay to show if wrong password/user
   const toggleOverlay = () => {
     setVisible(!visible);
   };
@@ -85,7 +86,7 @@ const Login = ({navigation}) => {
   var token = "";
   
 
-  const grantAccess = async () => {
+  const grantAccess = async () => { //GET request to see if user and password exist in SQL database
     const url = 'http://192.168.0.10:8080/api/v1/users/' + token;
     const accessGranted = (await axios.get(`${url}`)).data;
     
@@ -94,7 +95,7 @@ const Login = ({navigation}) => {
     )
   }
 
-  return (
+  return ( //Login screen
   <View style={styles.container}>
     <Text h3> Login </Text>
     <Input
@@ -130,8 +131,8 @@ const Login = ({navigation}) => {
       title = "Log In"
       buttonStyle={buttonStyle}
       onPress = {async () => {
-        token= JWT.encode({user: username, password: password},key).toString();
-        if((await grantAccess())==true){
+        token= JWT.encode({user: username, password: password},key).toString(); //generates token for the specific user
+        if((await grantAccess())==true){ //checks if the GET request was true for user password and navigates to next screen
           navigation.navigate('homescreen',{paramToken: token});
         } else {
           toggleOverlay();
@@ -144,8 +145,8 @@ const Login = ({navigation}) => {
   )
 }
 
-const Homescreen = ({route, navigation}) => {
-  const token = route.params.paramToken;
+const Homescreen = ({route, navigation}) => {  //Main Screen
+  const token = route.params.paramToken;  //receives the token from previous screen for the specific user
   const [tripId, onChangeTripId] = React.useState("tripId");
   const config = {
     headers: {
@@ -153,11 +154,11 @@ const Homescreen = ({route, navigation}) => {
     }
   };
   
-  const postTrip = () => {
-    axios.post('http://192.168.0.10:8080/api/v1/trips/posttrip', {tripID:tripId,enabled:false}, config)
+  const postTrip = () => { //Sends post request to the server to disable trip when user chooses "close trip"
+    axios.post('http://'+compIP+'/api/v1/trips/posttrip', {tripID:tripId,enabled:false}, config)
   }
 
-  return (
+  return ( //main screen
   <View style={styles.container}>
     <Text h4> Insert the trip ID:
     </Text>
@@ -187,7 +188,7 @@ const Homescreen = ({route, navigation}) => {
       title = "Close Trip"
       buttonStyle={buttonStyle}
       onPress = {() => {
-        postTrip();
+        postTrip(); //disables the trip if the user closes the trip
         navigation.navigate('report',{paramTripId: tripId});
 
       }}
@@ -196,16 +197,16 @@ const Homescreen = ({route, navigation}) => {
   )
 }
 
-const SeeExpenses = ({route, navigation}) => {
-  const paramTripId = route.params.paramTripId;
+const SeeExpenses = ({route, navigation}) => { //See all Expenses screen
+  const paramTripId = route.params.paramTripId;  //receives the trip ID from previous screen
   const[expenses, getExpenses] = useState([{"id":null,"travelID":null,"userID":null,"amount":null,"description":null}]);
-  const url = 'http://192.168.0.10:8080/api/v1/expenses/allexpensesbytrip/' + paramTripId;
+  const url = 'http://'+compIP+'/api/v1/expenses/allexpensesbytrip/' + paramTripId;
 
-  useEffect(() => {
+  useEffect(() => {  //renders all the expenses after charging
     getAllExpenses();
   },[]);
 
-  const getAllExpenses = () => {
+  const getAllExpenses = () => { //GET request for all expenses in the expenses table with the tripID provided
     axios.get(`${url}`)
     .then((response)=>{
       const allExpenses = response.data.map(function(expense){
@@ -222,7 +223,7 @@ const SeeExpenses = ({route, navigation}) => {
 
 
 
-  return (
+  return (  //See all expenses screen basically displaying a table
   <View style={styles.container}>
     <View style={tableStyle}>
       <View style={tableHeaderStyle}>
@@ -250,13 +251,13 @@ const SeeExpenses = ({route, navigation}) => {
   )
 }
 
-const PostExpense = ({route, navigation}) => {
+const PostExpense = ({route, navigation}) => {  //Post expense screen
   const [visible, setVisible] = useState(false);
 
-  const toggleOverlay = () => {
+  const toggleOverlay = () => { //Overlay to show if the trip is disabled(closed) or if the expense is posted successfully
     setVisible(!visible);
   };
-  const token = route.params.paramToken;
+  const token = route.params.paramToken;  //receives the token, which will be used to identify the user posing the expense
   const paramTripId = route.params.paramTripId;
   const [amount, onChangeAmount] = React.useState(0.0);
   const [description, onChangeDescription] = React.useState("description");
@@ -268,9 +269,9 @@ const PostExpense = ({route, navigation}) => {
     }
   };
 
-  const postExpense = async() => {
+  const postExpense = async() => {//POST request to the table in database containing expenses
     var response = false;
-    await axios.post('http://192.168.0.10:8080/api/v1/expenses/postexpense', expenseJson, config)
+    await axios.post('http://'+compIP+'/api/v1/expenses/postexpense', expenseJson, config)
     .then(res => {
       response = res.data;
     })
@@ -282,7 +283,7 @@ const PostExpense = ({route, navigation}) => {
 
   }
 
-  return (
+  return ( //Post expense screen
   <View style={styles.container}>
     <Input
       placeholder = "Amount"
@@ -323,18 +324,18 @@ const PostExpense = ({route, navigation}) => {
   )
 }
 
-const Report = ({route, navigation}) => {
+const Report = ({route, navigation}) => { //Report screen, gets all expenses of a trip, adds up the amount each user paid, divides the total of the trip between users, and prints the balance for each user
   const token = route.params.paramToken;
   const paramTripId = route.params.paramTripId;
   const[expenses, getExpenses] = useState([{"id":null,"travelID":null,"userID":null,"amount":null,"description":null}]);
   const[message, changeMessage] = useState("");
-  const url = 'http://192.168.0.10:8080/api/v1/expenses/report/' + paramTripId;
+  const url = 'http://'+compIP+'/api/v1/expenses/report/' + paramTripId;
   
   useEffect(() => {
     getReport();
   },[]);
 
-  const getReport = () => {
+  const getReport = () => { //GET request for the expenses of a trip
     axios.get(`${url}`)
     .then((response)=>{
       const allExpenses = response.data.map(function(expense){
@@ -349,7 +350,7 @@ const Report = ({route, navigation}) => {
     )
   }
 
-  const getTotal = () => {
+  const getTotal = () => { //gets total spent on the trip
     var total = 0.0;
     for(const expense of expenses){
       total+=expense.amount;
@@ -359,7 +360,7 @@ const Report = ({route, navigation}) => {
 
   var whoGetsWhat = "";
 
-  return (
+  return ( //display the table with the aforementioned info
   <View style={styles.container}>
 
     <View style={tableStyle}>
