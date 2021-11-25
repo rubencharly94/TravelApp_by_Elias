@@ -1,23 +1,14 @@
 
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import {  StyleSheet, TextInput, View } from 'react-native';
+import {  StyleSheet, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
-import ExpensesService from './services/ExpensesService';
 import axios from "axios";
 import JWT from 'expo-jwt';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Text,Input, Button, Overlay} from 'react-native-elements';
-import Constants from "expo-constants";
-/* const { manifest } = Constants;
-
-const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts.dev
-  ? manifest.debuggerHost.split(`:`).shift().concat(`:3000`)
-  : `api.example.com`; */
-
-//const EXPENSES_API_BASE_URL = "http://localhost:8080/api/v1/expenses";
 
 const Stack = createNativeStackNavigator();
 const key = "travelapp2021";
@@ -36,26 +27,16 @@ const headerStyle = {
   },
 }
 const buttonStyle = {backgroundColor:'#00c7b6' ,margin:10 };
-const inputStyle = {width:'70%',/* margin:'10px', */ textAlign:'center'};
+const inputStyle = {width:'70%',textAlign:'center'};
 const tableStyle = {borderCollapse: 'collapse',
-/* margin: '5px', */
 fontSize: '1em',
 fontFamily: 'sans-serif',
-//minWidth: '200px',
 boxShadow: '0 0 20px rgba(0, 0, 0, 0.15)'};
-const tableHeaderStyle = {backgroundColor:'gray',fontSize:'1.2em',flexDirection: "row",/*, minHeight:'100px' */};
+const tableHeaderStyle = {backgroundColor:'#81f7ed',fontSize:'1.2em',flexDirection: "row"};
 
 
 
 export default function App() {
-
-
-
-  /*componentDidMount(){
-    ExpensesService.getExpenses().then();
-  }*/
-
-  
 
   return (<SafeAreaProvider>
     <NavigationContainer>
@@ -101,7 +82,6 @@ const Login = ({navigation}) => {
   };
   const [username, onChangeUsername] = React.useState("username1");
   const [password, onChangePassword] = React.useState("password1");
-  const [alerta, onChangeAlerta] = React.useState("");
   var token = "";
   
 
@@ -109,13 +89,6 @@ const Login = ({navigation}) => {
     const url = 'http://192.168.0.10:8080/api/v1/users/' + token;
     const accessGranted = (await axios.get(`${url}`)).data;
     
-
-    /*axios.get(`${url}`)
-    .then((response)=>{
-      accessGranted = response.data;
-    })
-    .catch(error => console.error(`Error: ${error}`));*/
-
     return(
       accessGranted
     )
@@ -155,14 +128,13 @@ const Login = ({navigation}) => {
       </Overlay>
     <Button
       title = "Log In"
-      buttonStyle={{backgroundColor:'#00c7b6'}}
+      buttonStyle={buttonStyle}
       onPress = {async () => {
         token= JWT.encode({user: username, password: password},key).toString();
         if((await grantAccess())==true){
           navigation.navigate('homescreen',{paramToken: token});
         } else {
           toggleOverlay();
-          //onChangeAlerta("Wrong Password/User");
         }
         
       }
@@ -180,45 +152,14 @@ const Homescreen = ({route, navigation}) => {
       'Content-Type': 'application/json'
     }
   };
-  /*const[expenses, getExpenses] = useState('');
-  const url = 'http://localhost:8080/api/v1/expenses';
-
-  useEffect(() => {
-    getAllExpenses();
-  },[]);
-
-  const getAllExpenses = () => {
-    axios.get(`${url}`)
-    .then((response)=>{
-      const allExpenses = response.data.map(function(line){
-        return line['travelID'];
-      });
-      getExpenses(allExpenses);
-    })
-    .catch(error => console.error(`Error: ${error}`));
-
-    return(
-      expenses
-    )
-  }*/
-
-  /*const validateUser = () => {
-
-  }*/
   
   const postTrip = () => {
     axios.post('http://192.168.0.10:8080/api/v1/trips/posttrip', {tripID:tripId,enabled:false}, config)
-    //.then(res => {
-      //response = res.data;
-    //})
-    //.then(response => this.setState({ articleId: response.data.id }))
-    //.catch(error => console.error(`Error: ${error}`));
-
   }
 
   return (
   <View style={styles.container}>
-    <Text h4/*  style={{margin:'20px'}} */> Insert the trip ID:
+    <Text h4> Insert the trip ID:
     </Text>
     <Input
       placeholder = "tripId"
@@ -285,20 +226,20 @@ const SeeExpenses = ({route, navigation}) => {
   <View style={styles.container}>
     <View style={tableStyle}>
       <View style={tableHeaderStyle}>
-          <View><Text>Travel ID</Text></View>
-          <View><Text>User ID</Text></View>
-          <View><Text>Amounut</Text></View>
-          <View><Text>Description</Text></View>
+          <View><Text style={{fontWeight:'bold'}}>Travel ID     </Text></View>
+          <View><Text style={{fontWeight:'bold'}}>User ID     </Text></View>
+          <View><Text style={{fontWeight:'bold'}}>Amount     </Text></View>
+          <View><Text style={{fontWeight:'bold'}}>Description     </Text></View>
       </View>
         {
           expenses.map(
             (expense) => (
 
-              <View key={expense.id} style={{flexDirection:'row'}}>
-                <View><Text>  {expense.travelID}  </Text></View>
-                <View><Text>  {expense.userID}  </Text></View>
-                <View><Text>  {expense.amount}  </Text></View>
-                <View><Text>  {expense.description}  </Text></View>
+              <View key={expense.id} style={{flexDirection:'row',justifyContent: 'space-between'}}>
+                <View style={{ flex: 1}}><Text>  {expense.travelID}  </Text></View>
+                <View style={{ flex: 1}}><Text>{expense.userID}  </Text></View>
+                <View style={{ flex: 1}}><Text>{expense.amount}  </Text></View>
+                <View style={{ flex: 1}}><Text>  {expense.description}  </Text></View>
               </View>
             )
           )
@@ -327,19 +268,12 @@ const PostExpense = ({route, navigation}) => {
     }
   };
 
-  /*useEffect(() => {
-    postExpense();
-  },[]);*/
-
   const postExpense = async() => {
     var response = false;
     await axios.post('http://192.168.0.10:8080/api/v1/expenses/postexpense', expenseJson, config)
     .then(res => {
       response = res.data;
     })
-    //.then(response => this.setState({ articleId: response.data.id }))
-    //.catch(error => console.error(`Error: ${error}`));
-    console.log(response);
     if(response===true){
       onChangeMessage("Expense posted successfully!");
     } else {
@@ -378,6 +312,7 @@ const PostExpense = ({route, navigation}) => {
         <Text>{message}</Text>
       </Overlay>
     <Button
+      buttonStyle={buttonStyle}
       title = "Post"
       onPress = {() => {
         postExpense();
@@ -429,33 +364,34 @@ const Report = ({route, navigation}) => {
 
     <View style={tableStyle}>
         <View style={tableHeaderStyle}>
-          <View><Text> REPORT </Text></View>
+          <View><Text style={{fontWeight: 'bold'}}> REPORT </Text></View>
         </View>
         {
           expenses.map(
             (expense) => (
 
-              <View key={expense.id} style={{flexDirection:'row'}}>
+              <View key={expense.id} style={{flexDirection:'row',justifyContent: 'space-between'}}>
                 <View><Text> {expense.userID} </Text></View>
                 <View><Text> paid </Text></View>
-                <View><Text> {expense.amount} </Text></View>
+                <View style={{alignSelf: 'flex-end'}}><Text> {expense.amount} </Text></View>
               </View>
             )
           )
         }
-        <View style={tableHeaderStyle}>
+        <View style={{fontWeight: 'bold',flexDirection:'row',justifyContent: 'space-between'}}>
           <View><Text> Grand Total: </Text></View>
-          <View><Text> {getTotal()} </Text></View>
+          <View style={{alignSelf: 'flex-end'}}><Text> {getTotal()} </Text></View>
+        </View>
+        <View style={tableHeaderStyle}>
+          <View><Text style={{fontWeight: 'bold'}}> Balance: </Text></View>
         </View>
         {
           expenses.map(
             (expense) => (
               
-              <View key={expense.id} style={{flexDirection:'row'}}>
+              <View key={expense.id} style={{flexDirection:'row',justifyContent: 'space-between'}}>
                 <View><Text> {expense.userID} </Text></View>
-                <View> <Text>{whoGetsWhat=((getTotal()/expenses.length-getTotal())<0) ? "has to get" : "has to pay"}{whoGetsWhat}</Text>
-                </View>
-                <View><Text> {(Math.abs(getTotal()/expenses.length-expense.amount)).toFixed(2)} </Text></View>
+                <View style={{alignSelf: 'flex-end'}}><Text> {(getTotal()/expenses.length-expense.amount).toFixed(2)} </Text></View>
               </View>
             )
           )
